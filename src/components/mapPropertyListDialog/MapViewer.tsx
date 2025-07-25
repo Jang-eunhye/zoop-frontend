@@ -9,9 +9,10 @@ type Position = {
 
 interface MapViewerProps {
   markerPoint: Position[];
+  onMarkerClick?: (propertyId: string | number) => void;
 }
 
-const MapViewer = ({ markerPoint }: MapViewerProps) => {
+const MapViewer = ({ markerPoint, onMarkerClick }: MapViewerProps) => {
   const mapElement = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -24,8 +25,10 @@ const MapViewer = ({ markerPoint }: MapViewerProps) => {
 
         const map = new window.kakao.maps.Map(container, {
           center: new window.kakao.maps.LatLng(37.5665, 126.978),
-          level: 9,
+          level: 3,
         });
+
+        const bounds = new window.kakao.maps.LatLngBounds();
 
         markerPoint.forEach((item, i) => {
           const latlng = new window.kakao.maps.LatLng(item.latitude, item.longitude);
@@ -47,19 +50,32 @@ const MapViewer = ({ markerPoint }: MapViewerProps) => {
             imgOptions,
           );
 
-          new window.kakao.maps.Marker({
+          const marker = new window.kakao.maps.Marker({
             map,
             position: latlng,
             image: markerImage,
           });
+
+          // ✅ 마커 클릭 시 콜백 실행
+          if (onMarkerClick && item.propertyId !== undefined) {
+            window.kakao.maps.event.addListener(marker, "click", () => {
+              onMarkerClick(item.propertyId!);
+            });
+          }
+
+          bounds.extend(latlng);
         });
+
+        if (!bounds.isEmpty()) {
+          map.setBounds(bounds);
+        }
       });
     }, 100);
 
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [markerPoint]);
+  }, [markerPoint, onMarkerClick]);
 
   return <div ref={mapElement} id="map" className="h-full w-full" />;
 };

@@ -1,3 +1,5 @@
+"use client";
+
 import ChatPageLayout from "./chat/ChatPageLayout";
 
 export default function HomePage() {

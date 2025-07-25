@@ -1,7 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import BookmarkButton from "./BookmarkButton";
+import toast from "react-hot-toast";
+import CustomToast from "./CustomToast";
 
 interface PropertyCardProps {
   // BE 전달 데이터
@@ -12,7 +14,7 @@ interface PropertyCardProps {
   summary: string[]; // ex. ["신축", "풀옵션", "역세권"],없으면 []
   realEstateTypeName: string; //  ex."아파트","오피스텔", "빌라", "단독", "다가구"
   dealOrWarrantPrc: string; // ex."3억"
-  buildingName: string; // ex. "101동"  빌라인 경우  "빌라" 또는 "다인힐"등 건물명
+  buildingName?: string | null; // ex. "101동"  빌라인 경우  "빌라" 또는 "다인힐"등 건물명
   area2: string; // ex."34.5",
   isBookmarked: boolean; // ex. true,
   imageUrl: string; // ex. "https://cdn.example.com/images/123.jpg", 없으면 ""
@@ -39,7 +41,7 @@ const PropertyCard = ({
   summary,
   realEstateTypeName,
   dealOrWarrantPrc,
-  buildingName,
+  buildingName: originalBuildingName,
   area2,
   isBookmarked,
   imageUrl,
@@ -48,21 +50,50 @@ const PropertyCard = ({
   rentPrice,
   // warrantPrice,
   // dealPrice,
-  aptName,
+  aptName: originalAptName,
   articleName: originalArticleName,
   isActive = true,
   size = "md",
   isNumberVisible = true,
 }: PropertyCardProps) => {
   const router = useRouter();
+  const pathname = usePathname();
 
-  const articleName =
-    realEstateTypeName === "아파트" || realEstateTypeName === "오피스텔"
-      ? aptName
-      : originalArticleName;
+  const buildingName = originalBuildingName || "";
+  const aptName = originalAptName || "";
+  let articleName = originalArticleName || "";
+
+  if (realEstateTypeName === "아파트" || realEstateTypeName === "오피스텔") {
+    articleName = aptName;
+  } else {
+    articleName = originalArticleName || "";
+  }
+
+  const articleFullName =
+    realEstateTypeName === articleName ? buildingName : `${articleName} ${buildingName}`;
 
   const handleCardClick = () => {
     router.push(`/property/${propertyId}`);
+  };
+
+  const showBookmarkToast = (added: boolean) => {
+    toast(
+      ({ id }) => (
+        <CustomToast
+          message={added ? "찜한 매물에 추가했어요." : "찜한 매물에서 제외됐어요."}
+          actionText={added && pathname !== "/mypage" ? "찜한 매물 보기" : undefined}
+          onClickAction={
+            added && pathname !== "/mypage"
+              ? () => {
+                  router.push("/mypage");
+                  toast.dismiss(id);
+                }
+              : undefined
+          }
+        />
+      ),
+      { duration: 2000 },
+    );
   };
 
   return (
@@ -93,7 +124,7 @@ const PropertyCard = ({
       </div>
 
       {/* 정보 섹션 */}
-      <div className="inline-flex flex-1 flex-col justify-between self-stretch">
+      <div className="inline-flex max-w-full flex-1 flex-col justify-between self-stretch truncate">
         <div
           className={`flex flex-col gap-0.5 self-stretch ${isActive ? "text-black" : "text-gray-600-hint"}`}
         >
@@ -103,16 +134,17 @@ const PropertyCard = ({
               {tradeTypeName} {dealOrWarrantPrc}
               {rentPrice ? `/${rentPrice}` : ""}
             </div>
-            <BookmarkButton itemId={propertyId} initialBookmarked={isBookmarked} />
+            <BookmarkButton
+              itemId={propertyId}
+              initialBookmarked={isBookmarked}
+              onSuccess={showBookmarkToast}
+            />
           </div>
 
           {/* 주소와 건물 정보 */}
           <div className="flex flex-col items-start gap-0.5 self-stretch">
-            <div className="inline-flex items-center gap-1 self-stretch">
-              {realEstateTypeName !== articleName && (
-                <p className="text-grey-100 max-w-fit truncate text-body2">{articleName}</p>
-              )}
-              <p className="min-w-fit text-body2">{buildingName}</p>
+            <div className="items-center self-stretch">
+              <p className="text-grey-100 truncate text-body2">{articleFullName}</p>
             </div>
             <div className="h-5 self-stretch text-body2">
               {realEstateTypeName}, {area2}㎡

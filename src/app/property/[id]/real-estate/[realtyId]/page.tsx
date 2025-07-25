@@ -13,17 +13,17 @@ const statsItems = [
   { label: "매매", value: "deal" },
 ];
 
-const RealEstatePage = ({ params }: { params: Promise<{ id: string }> }) => {
+const RealEstatePage = ({ params }: { params: Promise<{ id: string; realtyId: string }> }) => {
   const router = useRouter();
-  const { id } = use(params);
-  const realtyId = parseInt(id);
+  const { id, realtyId } = use(params);
+  const propertyId = Number(id);
 
   // 부동산 정보
   const {
     data: realEstateInfoResponse,
     isLoading: isInfoLoading,
     error: infoError,
-  } = useRealEstateInfoQuery(realtyId, !!realtyId);
+  } = useRealEstateInfoQuery(propertyId, !!propertyId);
 
   const phoneNumbers = [
     ...(realEstateInfoResponse?.data?.representativeTelNo
@@ -88,7 +88,7 @@ const RealEstatePage = ({ params }: { params: Promise<{ id: string }> }) => {
             lease: realEstateData.leaseCount,
             deal: realEstateData.dealCount,
           }}
-          realtyId={realtyId}
+          realtyId={Number(realtyId)}
         />
         <RealEstateCallButton phoneNumber={phoneNumbers} />
       </div>

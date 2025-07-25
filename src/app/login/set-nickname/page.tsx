@@ -24,7 +24,7 @@ const Page = () => {
 
       router.push("/");
     } catch (err) {
-      alert("닉네임 등록 중 오류가 발생했습니다.");
+      console.error("닉네임 입력발생");
     }
   };
 

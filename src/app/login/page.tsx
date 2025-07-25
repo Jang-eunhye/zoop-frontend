@@ -1,16 +1,33 @@
 "use client";
+import { getUserInfo } from "@/apis/login/getUserInfo";
 import Onboarding from "@/components/login/onboarding";
 import { Button } from "@/components/ui/button";
+// import useRedirect from "@/hooks/common/useRedirect";
 import { Header } from "@/layout/Header";
+import { useUserInfoStore } from "@/stores/useUserInfoStore";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showOnboarding, setShowOnboarding] = useState(true); // 다이얼로그 on/off
 
   const kakaoClientId = process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID;
   const redirectUri = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
   const kakaoUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${kakaoClientId}&redirect_uri=${redirectUri}`;
+
+  // useRedirect();
+
+  const handleSubmit = async () => {
+    try {
+      const userData = await getUserInfo();
+
+      router.push("/");
+    } catch (err) {
+      console.log("err :", err);
+    }
+  };
 
   return (
     <>
@@ -43,6 +60,7 @@ export default function LoginPage() {
               <span className="text-subtitle1">부동산 매물 추천 AI 챗봇</span>
             </div>
             <Button
+              onClick={handleSubmit}
               asChild
               className="mt-32 h-[50px] w-full rounded-[8px] bg-[#FEE500] text-base font-medium text-[#000000] hover:bg-[#fada0b]"
             >
